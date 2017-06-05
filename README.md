@@ -1,2 +1,2 @@
 # biodiversity-ds
-Data science studies in Biodiversity
+Repository for my data science studies on biodiversity
