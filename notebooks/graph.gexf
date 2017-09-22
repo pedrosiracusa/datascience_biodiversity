@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gexf version="1.1" xmlns="http://www.gexf.net/1.1draft" xmlns:viz="http://www.gexf.net/1.1draft/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.w3.org/2001/XMLSchema-instance">
+  <graph defaultedgetype="undirected" mode="static">
+    <attributes class="node" mode="static">
+      <attribute id="0" title="n_records" type="long" />
+    </attributes>
+    <nodes>
+      <node id="msalazaryepes" label="msalazaryepes">
+        <attvalues>
+          <attvalue for="0" value="1215" />
+        </attvalues>
+      </node>
+      <node id="aacarvalho" label="aacarvalho">
+        <attvalues>
+          <attvalue for="0" value="1149" />
+        </attvalues>
+      </node>
+      <node id="cmsakuragui" label="cmsakuragui">
+        <attvalues>
+          <attvalue for="0" value="79" />
+        </attvalues>
+      </node>
+      <node id="fsantoro" label="fsantoro">
+        <attvalues>
+          <attvalue for="0" value="100" />
+        </attvalues>
+      </node>
+      <node id="ifranca" label="ifranca">
+        <attvalues>
+          <attvalue for="0" value="161" />
+        </attvalues>
+      </node>
+      <node id="brade,ac" label="brade,ac">
+        <attvalues>
+          <attvalue for="0" value="911" />
+        </attvalues>
+      </node>
+      <node id="lanstyak,l" label="lanstyak,l">
+        <attvalues>
+          <attvalue for="0" value="41" />
+        </attvalues>
+      </node>
+      <node id="edpereira" label="edpereira">
+        <attvalues>
+          <attvalue for="0" value="25" />
+        </attvalues>
+      </node>
+      <node id="egle" label="egle">
+        <attvalues>
+          <attvalue for="0" value="1" />
+        </attvalues>
+      </node>
+      <node id="graziela" label="graziela">
+        <attvalues>
+          <attvalue for="0" value="4" />
+        </attvalues>
+      </node>
+      <node id="apparicio" label="apparicio">
+        <attvalues>
+          <attvalue for="0" value="37" />
+        </attvalues>
+      </node>
+      <node id="edmundo" label="edmundo">
+        <attvalues>
+          <attvalue for="0" value="3" />
+        </attvalues>
+      </node>
+      <node id="dpcosta" label="dpcosta">
+        <attvalues>
+          <attvalue for="0" value="103" />
+        </attvalues>
+      </node>
+      <node id="srgradstein" label="srgradstein">
+        <attvalues>
+          <attvalue for="0" value="21" />
+        </attvalues>
+      </node>
+      <node id="mdmviannafilho" label="mdmviannafilho">
+        <attvalues>
+          <attvalue for="0" value="1" />
+        </attvalues>
+      </node>
+      <node id="acmota" label="acmota">
+        <attvalues>
+          <attvalue for="0" value="1" />
+        </attvalues>
+      </node>
+      <node id="oswaldofidalgo" label="oswaldofidalgo">
+        <attvalues>
+          <attvalue for="0" value="110" />
+        </attvalues>
+      </node>
+      <node id="kauffmannfidalgo" label="kauffmannfidalgo">
+        <attvalues>
+          <attvalue for="0" value="42" />
+        </attvalues>
+      </node>
+      <node id="silveiramelo,o" label="silveiramelo,o">
+        <attvalues>
+          <attvalue for="0" value="2" />
+        </attvalues>
+      </node>
+      <node id="occhioni,p" label="occhioni,p">
+        <attvalues>
+          <attvalue for="0" value="15" />
+        </attvalues>
+      </node>
+      <node id="luiz" label="luiz">
+        <attvalues>
+          <attvalue for="0" value="37" />
+        </attvalues>
+      </node>
+      <node id="mpmdelima" label="mpmdelima">
+        <attvalues>
+          <attvalue for="0" value="67" />
+        </attvalues>
+      </node>
+      <node id="mbarros" label="mbarros">
+        <attvalues>
+          <attvalue for="0" value="1" />
+        </attvalues>
+      </node>
+      <node id="pilger" label="pilger">
+        <attvalues>
+          <attvalue for="0" value="3" />
+        </attvalues>
+      </node>
+      <node id="tamandaredetoledo" label="tamandaredetoledo">
+        <attvalues>
+          <attvalue for="0" value="34" />
+        </attvalues>
+      </node>
+      <node id="pjmaas" label="pjmaas">
+        <attvalues>
+          <attvalue for="0" value="14" />
+        </attvalues>
+      </node>
+      <node id="gmartinelli" label="gmartinelli">
+        <attvalues>
+          <attvalue for="0" value="26" />
+        </attvalues>
+      </node>
+      <node id="ftoledojr" label="ftoledojr">
+        <attvalues>
+          <attvalue for="0" value="4" />
+        </attvalues>
+      </node>
+      <node id="lssylvestre" label="lssylvestre">
+        <attvalues>
+          <attvalue for="0" value="2" />
+        </attvalues>
+      </node>
+      <node id="lcsgiordano" label="lcsgiordano">
+        <attvalues>
+          <attvalue for="0" value="1" />
+        </attvalues>
+      </node>
+      <node id="ssalgado" label="ssalgado">
+        <attvalues>
+          <attvalue for="0" value="1" />
+        </attvalues>
+      </node>
+    </nodes>
+    <edges>
+      <edge id="0" source="msalazaryepes" target="aacarvalho" weight="1149" />
+      <edge id="1" source="msalazaryepes" target="cmsakuragui" weight="79" />
+      <edge id="2" source="msalazaryepes" target="fsantoro" weight="100" />
+      <edge id="3" source="msalazaryepes" target="ifranca" weight="161" />
+      <edge id="4" source="aacarvalho" target="cmsakuragui" weight="79" />
+      <edge id="5" source="aacarvalho" target="fsantoro" weight="100" />
+      <edge id="6" source="aacarvalho" target="ifranca" weight="161" />
+      <edge id="7" source="brade,ac" target="lanstyak,l" weight="15" />
+      <edge id="8" source="brade,ac" target="luiz" weight="1" />
+      <edge id="9" source="brade,ac" target="pilger" weight="1" />
+      <edge id="10" source="brade,ac" target="tamandaredetoledo" weight="6" />
+      <edge id="11" source="brade,ac" target="ftoledojr" weight="1" />
+      <edge id="12" source="edpereira" target="egle" weight="1" />
+      <edge id="13" source="edpereira" target="graziela" weight="1" />
+      <edge id="14" source="egle" target="graziela" weight="1" />
+      <edge id="15" source="apparicio" target="edmundo" weight="2" />
+      <edge id="16" source="dpcosta" target="srgradstein" weight="5" />
+      <edge id="17" source="mdmviannafilho" target="acmota" weight="1" />
+      <edge id="18" source="oswaldofidalgo" target="kauffmannfidalgo" weight="40" />
+      <edge id="19" source="silveiramelo,o" target="occhioni,p" weight="2" />
+      <edge id="20" source="mpmdelima" target="mbarros" weight="1" />
+      <edge id="21" source="pjmaas" target="gmartinelli" weight="4" />
+      <edge id="22" source="lssylvestre" target="lcsgiordano" weight="1" />
+      <edge id="23" source="lssylvestre" target="ssalgado" weight="1" />
+      <edge id="24" source="lcsgiordano" target="ssalgado" weight="1" />
+    </edges>
+  </graph>
+</gexf>
