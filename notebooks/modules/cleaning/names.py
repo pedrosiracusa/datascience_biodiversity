@@ -2,10 +2,10 @@
 Names Cleaning module
 """
 
-import json, re
-import unicodedata, string
+import json, re, string, unicodedata
 from collections import Counter
 from copy import deepcopy
+from warnings import warn
 
 
 
@@ -284,181 +284,235 @@ def normalize(name, normalizationForm='NFKD'):
     return ','.join(name_ls)
 
 
-"""
-The NamesMap class
-===================
-"""
+# ------------------
+# The NamesMap class
+# ------------------
+
 class NamesMap:
-    _map=None
-    _normalizationFunction=None
-    _remappingDict=None
+    """
+    The class which describes NamesMap objects. Names maps store both name primitives and normalized 
+    names. Primitives are the "original names", as they're given as input to the class constructor. 
+    When the class is instanced each name primitive is mapped to its normalized form through a
+    normalization function. Normalized maps can then be remapped to other names by following a 
+    remapping index.
+    """
     
-    def __init__(self, names, normalizationFunction, *args, **kwargs):  
-        self._normalizationFunction = normalizationFunction    
-        if 'jsondata' in kwargs:
-            self._map = kwargs['jsondata']['_map']
-            self._remappingDict = kwargs['jsondata']['_remappingDict']
-        else:
-            self._map = dict( (n, self._normalizationFunction(n)) for n in names )
-        return
-    
-    def clearMap(self):
+    def __init__(self, names, normalizationFunc, remappingIndex=None, *args, **kwargs):
         """
-        Resets the map to an empty dict
-        """
-        self._map={}
-        return
-    
-    def remap(self, remappingDict, fromScratch=False, preventOverwriting=True):
-        """
-        Updates the remapping dictionary.
+        The NamesMap constructor
         
         Parameters
         ----------
-        remappingDict : dict
-            Remaps values in the map attribute.
+        names : list
+            A list with names to be normalized
+        
+        normalizationFunc : function
+            A function or expression for names normalization
+            
+        remappingIndex : dict
+            A dictionary with mapped names to initialize the instance's remapping index
+        """
+        self._normalizationFunc = normalizationFunc
+        
+        load_map_prim_norm = kwargs.get('_map_prim_norm',None)
+        load_remappingIndex = kwargs.get('_remappingIndex',None)
+        
+        normNamesDict = lambda nlst: dict( (n,self._normalizationFunc(n)) for n in nlst )
+        self._map_prim_norm = normNamesDict(names) if load_map_prim_norm is None else load_map_prim_norm 
+        self._remappingIndex = remappingIndex if load_remappingIndex is None else load_remappingIndex
+    
+
+    def _getRef(self,n):
+        """
+        Follows all chained references for a name in the remapping index
+        
+        Parameters
+        ----------
+        n : str
+            The name to be de-referenced
+        """
+        start=n
+        chain=[]
+        remappingKeys = self._remappingIndex.keys()
+        while n in remappingKeys:
+            chain.append(n)
+            n = self._remappingIndex[n]
+            if n in chain:
+                chain.append(n)
+                raise RuntimeError("Loopback detected", start, chain)
+        return n
+    
+    
+    def _get_loopback_inconsistencies(self):
+        """
+        Detects loopbacks in in mapping chains
+        """
+        inconsistencies = {}
+        for k in self._remappingIndex.keys():
+            try:
+                self._getRef(k)
+                
+            except RuntimeError as e:
+                inconsistencies['mes'] = inconsistencies.get('mes',[]) + [e.args[0]]
+                inconsistencies['key'] = inconsistencies.get('key',[]) + [e.args[1]]
+                inconsistencies['chain'] = inconsistencies.get('chain',[]) + [e.args[2]]
+        
+        if len(inconsistencies)==0:
+            return None
+        else:
+            return inconsistencies
+    
+    
+    def _remove_selfloops(self):
+        keys_to_remove = [ k for k in self._remappingIndex.keys() if k==self._remappingIndex[k]]       
+        for k in keys_to_remove:
+            self._remappingIndex.pop(k)
+                  
+            
+    def getInconsistencies(self, prettyPrint=True):
+        d = {}
+        d['loopback_inconsistencies'] = self._get_loopback_inconsistencies()
+        
+        if any( True if v is not None else False for v in d.values()  ):
+            if prettyPrint:
+                mes = "INCONSISTENCIES\n===============\n"
+
+                # loopback inconsistencies
+                if d['loopback_inconsistencies'] is not None:
+                    mes += "Loopback Inconsistencies\n"
+                    data = list(zip( *d['loopback_inconsistencies'].values() ))
+                    dataStr = lambda t: "  > {}: Starting from key '{}' got chain {}\n".format(*t)
+                    mes += ''.join( dataStr(t) for t in data )
+                    mes += '---------------'
+
+                return mes
+            
+            return d
+        
+        return None
+                
+        
+    def getMap(self, remap=True):
+        """
+        Returns a COPY of the names map.
+        
+        Parameters
+        ----------
+        remap : bool, default True
+            If set to True, the names map is buit by first de-referencing
+            remaps in the remapping index. Otherwise all remaps will not
+            be considered for building the names map.
+        """
+        res = deepcopy(self._map_prim_norm)
+        if remap and self._remappingIndex is not None:
+            for s,t in self._map_prim_norm.items():
+                try:
+                    res[s] = self._getRef(t)
+                except RuntimeError as e:
+                    raise(e)
+        return res
+
+    
+    def remap(self, remaps, fromScratch=False):
+        """
+        Updates the remapping dictionary using a list of tuples as input.
+        
+        Parameters
+        ----------
+        remaps : list of tuples
+            Remaps values from tuples (s,t), where a normalized name s remaps to a
+            normalized name t.
         
         fromScratch : bool
             If set to True the remapping dict becomes the one passed in. All other previous
             remaps are discarded.
-        
-        preventOverwriting : bool
-            If set to True (default), then a key cannot be remapped if it already exists
-            in the remapping dict.
-        """
-        remappingDict = deepcopy(remappingDict)
-        if fromScratch:
-            self._remappingDict = None
             
-        if self._remappingDict is None:
-            self._remappingDict = remappingDict
+        Note
+        ----
+        If the list of tuples passed in contains duplicated keys a warning is issued, and the
+        latest (key,value) pair is the one which will persist.
+        """        
+        # check for duplicated keys
+        duplicatedKeys = [ s for s,cnts in Counter( s for s,t in remaps ).items() if cnts>1 ]
+        if len(duplicatedKeys)>0: 
+            warningMsg = "Some keys from input are duplicated: {}.".format(str(duplicatedKeys))
+            warn(warningMsg)
         
-        else:
-            if preventOverwriting:
-                existantKeys = self._remappingDict.keys()
-                for k in remappingDict.keys():
-                    if k in existantKeys:
-                        raise ValueError("Cannot overwrite key '{}' in the remapping dict.".format(k))
-                    
-            self._remappingDict.update(remappingDict)
-        return    
+        # update remapping index
+        if fromScratch: self._remappingIndex=None
+        if self._remappingIndex is None: self._remappingIndex={}
+        
+        for s,t in remaps:
+            self._remappingIndex[s] = t
+        
+        self._remove_selfloops()
+        return self.getInconsistencies()
     
-    def remove_fromRemap(self, key):
+    
+    def setEndpoint(self, key):
         """
-        Removes element from the remapping dict
+        This method sets a name as the endpoint of a chain. This method is used for resolving loopbacks
+        in the remapping chain. The name is set to be the latest reference in the chain, and therefore
+        does not map to any other name.
+        
+        Parameter
+        ---------
+        key : str
+            The name to be set as the latest reference.
+        """
+        return self._remappingIndex.pop(key)
+    
+    
+    def write_toJson(self, filename, flatten=False):
+        """
+        Creates a json file to store a NamesMap's primitive-to-normalized names map and remapping index.
+        Data is stored as json object arguments `_map_prim_norm` and `_remappingIndex`.
         
         Parameters
         ----------
-        Key : dict key
-          Key of the element to be removed
-          
-        Returns
-        -------
-        The value associated to the removed key
+        filename : str
+            Path to the file to be created.
+        
+        flatten : bool, default False
+            If set to true, all remappings are consolidated into the `_map_prim_norm` map. In other words,
+            the remapping index is used to assign each name primitive to its final reference. All references
+            are then removed from the remapping index.
+        
         """
-        return self._remappingDict.pop(key)
-
-    def remap_fromJson(self, filepath, fromScratch=True):
-        with open(filepath, 'r') as f:
-            data = json.load(f)
-            remappingDict = data['_remappingDict']
-            self.remap(remappingDict,fromScratch)
-            return
-    
-    def setNormalizationFunc(self,normalizationFunction):
-        self._normalizationFunction = normalizationFunction
-        return
-    
-    def insertNames(self, names, normalizationFunction=None, rebuild=False):
-        # if rebuild is true, the entire map (but not the remapping dict) is rebuilt from scratch
-        if rebuild==True:
-            self.clearMap()
-        if normalizationFunction is None: 
-            if self._normalizationFunction is None:
-                raise ValueError("a normalization function must be defined")
-            normalizationFunction = self._normalizationFunction
-        self._map.update( dict( (n,normalizationFunction(n)) for n in names ) )
-        return
-    
-    def getMap(self, remap=True):
-        """
-        Returns a COPY of the names dictionary
-        If remap is set to True the remapping dictionary
-        is used to remap some names.
-        """
-        res = deepcopy(self._map)
-        if remap and self._remappingDict is not None:
-            getNamesPrimitives = lambda n: ( name for name,norm in self._map.items() if norm == n )
-            for n,t in ( (n,t) for s,t in self._remappingDict.items() for n in getNamesPrimitives(s) ):
-                res[n]=t
-        return res
-    
-    def getNormalizedNames(self, remap=True):
-        return sorted(list(set(self.getMap(remap=remap).values())))
-    
-    def getNamePrimitives(self, n):
-        nmap = self.getMap()
-        return [ name for name,norm in nmap.items() if norm == n ]
-    
-    def write_toJson(self, filename="names_map.json"):
-        json_dict = dict( (k,v) for (k,v) in vars(self).items() if k!='_normalizationFunction')
+        json_dict = dict([ ('_map_prim_norm', self.getMap() if flatten else self._map_prim_norm),
+                           ('_remappingIndex', {} if flatten else self._remappingIndex) ])
+        
         with open(filename, 'w') as output_file:
             json.dump( json_dict, output_file, sort_keys=True, indent=4, ensure_ascii=False)
-        return
-    
-    def reportRemappingInconsistencies(self, returnFormatted=True):
-        """
-        Reports inconsistencies in the remapping dictionary. Possible inconsistencies
-        classes are:
-          1. Keys that also appear as values;
-        """
-        inconsistencies_dict = {'keys_in_vals':('These names appear both as keys and values:', [])}
-        dictKeys = self._remappingDict.keys()
-        dictVals = self._remappingDict.values()
-        
-        # Keys_in_vals inconsistency
-        for k in dictKeys:
-            if k in list(dictVals):
-                inconsistencies_dict['keys_in_vals'][1].append(k)
-        
-        if sum( len(vals) for k,(desc,vals) in inconsistencies_dict.items() )==0:
-            return None
-        
-        else:
-            if returnFormatted:
-                resStr = ""
-                for k,(desc, vals) in inconsistencies_dict.items():
-                    if len(vals)!=0:
-                        resStr += "{}\n{}\n".format(desc, ''.join("=" for i in range(len(desc))) )
-                        resStr += ''.join( "  {}\n".format(v) for v in vals )
-                        resStr += "{}\n".format(''.join("-" for i in range(len(desc))) ) 
-                    return resStr
+            
 
-            else:
-                return inconsistencies_dict
             
-            
-            
-            
-def read_namesMap(filepath, fileType='json', *args, **kwargs):
+def read_NamesMap_fromJson(filepath, normalizationFunc=None):
     """
-    Reads a names map from a file and returns a NamesMap instance.
-    Currently only json files are supported.
+    Creates a NamesMap instance from a json file containing both a primitive-to-normalized names map
+    and a remapping index. The json object must have both attributes `map_prim_norm` and 
+    `_remappingIndex`, which stores data used to instance NamesMap class.
     
-    Note
-    ----
-    The normalization function cannot be stored in JSON, and therefore it 
-    must be passed as an optional keyword argument 'normalizationFunction'. If no 
-    normalization function is passed new names cannot be inserted into the map,
-    although remapping can still be done.
+    Parameters
+    ----------
+    filepath : str
+        Path to the json file containing the map
+        
+    normalizationFunc : function
+        A normalization function to be passed to the NamesMap constructor. If it is 
+        not set a warning is issued, as the NamesMap will not be assigned to any
+        normalization rule.
     """
-    if fileType=='json':
-        with open(filepath, 'r') as f:
-            data=json.load(f)
-            nm = NamesMap(names=None, normalizationFunction=kwargs.get('normalizationFunction', None), jsondata=data)
-        return nm
-    else:
-        raise ValueError("Unsupported file type '{}'.".format(fileType))
+    if normalizationFunc is None:
+        warn("A names map was created without a normalization function!")
+        
+    with open(filepath,'r') as f:
+        d = json.load(f)
+        nm = NamesMap( names=None, normalizationFunc=normalizationFunc, 
+                       _map_prim_norm=d['_map_prim_norm'], 
+                       _remappingIndex=d['_remappingIndex'])
+    
+    return nm
 
 
 
