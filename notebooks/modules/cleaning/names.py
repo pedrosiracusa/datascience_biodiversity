@@ -411,7 +411,36 @@ class NamesMap:
                 except RuntimeError as e:
                     raise(e)
         return res
-
+    
+    def addNames(self, names, normalizationFunc=None, updateExistingKeys=False):
+        """
+        Updates the names map using a list of primitive names, which are stored as references
+        to their normalized forms.
+        
+        Parameters
+        ----------
+        names : list
+            List with names to be inserted or updated in the map. They are stored as primitives,
+            mapping to their normalized forms.
+            
+        normalizationFunc : function
+            By default the instance's normalization function is used to normalize the new names 
+            primitives. If an alternative expression is passed in it will be used to perform the
+            normalization instead.
+            
+        updateExistingKeys : bool, default False
+            By default only names that still do not exist as keys in the primitives-normalized 
+            names map are normalized and updated. If set to True all input names will be 
+            updated in the names map.  
+        """
+        normFunc = self._normalizationFunc if normalizationFunc is None else normalizationFunc
+        d = dict( ( n,normFunc(n) ) for n in names )
+        
+        if not updateExistingKeys:
+            d = dict( (k,v) for k,v in d.items() if k not in self._map_prim_norm.keys() )
+        
+        self._map_prim_norm.update(d) 
+            
     
     def remap(self, remaps, fromScratch=False):
         """
@@ -483,10 +512,10 @@ class NamesMap:
                            ('_remappingIndex', {} if flatten else self._remappingIndex) ])
         
         with open(filename, 'w') as output_file:
-            json.dump( json_dict, output_file, sort_keys=True, indent=4, ensure_ascii=False)
-            
+            json.dump( json_dict, output_file, sort_keys=True, indent=4, ensure_ascii=False)           
 
             
+
 def read_NamesMap_fromJson(filepath, normalizationFunc=None):
     """
     Creates a NamesMap instance from a json file containing both a primitive-to-normalized names map
