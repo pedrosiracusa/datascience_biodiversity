@@ -33,18 +33,20 @@ class CoworkingNetwork(networkx.Graph):
      ('a', 'c', {}), 
      ('e', 'd', {})]
     """
-    def __init__(self, namesSets, weighted=False, namesMap=None):
-        super().__init__()
-        
-        if namesMap:
-            nmap = namesMap.getMap()
-            namesSets = [ [ nmap[n] for n in nset ] for nset in namesSets ]
-            
-        cliques = map( lambda n: itertools.combinations(n,r=2), namesSets )
-        edges = [ e for edges in cliques for e in edges ]
-        self.add_edges_from(edges)
-        
+    def __init__(self, data=None, namesSets=None, weighted=False, namesMap=None, **attr):
+       
+        if namesSets is not None:
+            if namesMap:
+                nmap = namesMap.getMap()
+                namesSets = [ [ nmap[n] for n in nset ] for nset in namesSets ]
+
+            cliques = map( lambda n: itertools.combinations(n,r=2), namesSets )
+            data = [ e for edges in cliques for e in edges ]
+
+        super().__init__(data=data,**attr)
+
         if weighted:
+            edges = data
             edges_weights = Counter(edges)
 
             for (u,v),w in edges_weights.items():
@@ -52,5 +54,3 @@ class CoworkingNetwork(networkx.Graph):
                     self[u][v]['weight'] += w
                 except:
                     self[u][v]['weight'] = w
-        
-        return
