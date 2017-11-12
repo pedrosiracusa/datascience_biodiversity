@@ -54,3 +54,48 @@ class CoworkingNetwork(networkx.Graph):
                     self[u][v]['weight'] += w
                 except:
                     self[u][v]['weight'] = w
+
+
+
+class SpeciesCollectorsNetwork(networkx.Graph):
+    """
+    Class for Species-collectors networks
+    """
+    def __init__(self, data=None, species=None, collectorsNames=None, weighted=False, namesMap=None, **attr):
+        
+        set_bipartite_attr=False
+        if species is not None and collectorsNames is not None:
+            if namesMap:
+                nmap = namesMap.getMap()
+                collectorsNames = [ [ nmap[n] for n in nset ] for nset in collectorsNames ]
+            
+            # build edges
+            if len(species)==len(collectorsNames):
+                species = list(species)
+                collectorsNames = list(collectorsNames)
+                
+                data = [ (sp,col) for i,sp in enumerate(species) for col in collectorsNames[i] ]
+                set_bipartite_attr=True
+
+        super().__init__(data=data,**attr)
+        
+        if set_bipartite_attr:
+            networkx.set_node_attributes( self, 'bipartite', dict( (n,1) for n in species) )
+            networkx.set_node_attributes( self, 'bipartite', dict( (n,0) for cols in collectorsNames for n in cols) )
+            
+        if weighted:
+            edges = data
+            edges_weights = Counter(edges)
+
+            for (u,v),w in edges_weights.items():
+                try:
+                    self[u][v]['weight'] += w
+                except:
+                    self[u][v]['weight'] = w    
+
+
+    def getSpeciesNodes(self,data=False):
+        return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==1 ]
+        
+    def getCollectorsNodes(self,data=False):
+        return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==0 ]
