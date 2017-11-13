@@ -60,8 +60,15 @@ class CoworkingNetwork(networkx.Graph):
 class SpeciesCollectorsNetwork(networkx.Graph):
     """
     Class for Species-collectors networks
+    
+    Parameters
+    ----------
+    
+    A dataframe with two columns: an atomized collectors names 
     """
     def __init__(self, data=None, species=None, collectorsNames=None, weighted=False, namesMap=None, **attr):
+        
+        self._speciesBag_matrix = None
         
         set_bipartite_attr=False
         if species is not None and collectorsNames is not None:
@@ -92,10 +99,23 @@ class SpeciesCollectorsNetwork(networkx.Graph):
                     self[u][v]['weight'] += w
                 except:
                     self[u][v]['weight'] = w    
-
-
+    
+    def _buildSpeciesBagMatrix( self, col_sp_order=None ):
+        col_sp_order=(sorted(self.getCollectorsNodes()),sorted(self.getSpeciesNodes())) if col_sp_order is None else col_sp_order
+        m = nx.bipartite.biadjacency_matrix(self,row_order=col_sp_order[0],column_order=col_sp_order[1])
+        self._speciesBag_matrix = (*col_sp_order,m)
+                    
     def getSpeciesNodes(self,data=False):
         return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==1 ]
         
     def getCollectorsNodes(self,data=False):
         return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==0 ]
+    
+    def getSpeciesBag( self, collectorName ):
+        if self._speciesBag_matrix is None:
+            self._buildSpeciesBagMatrix()
+            
+        collectorsList = self._speciesBag_matrix[0]
+        m = self._speciesBag_matrix[2]
+        i = collectorsList.index(collectorName)
+        return m.getrow(i)
