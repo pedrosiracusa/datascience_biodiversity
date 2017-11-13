@@ -102,7 +102,7 @@ class SpeciesCollectorsNetwork(networkx.Graph):
     
     def _buildSpeciesBagMatrix( self, col_sp_order=None ):
         col_sp_order=(sorted(self.getCollectorsNodes()),sorted(self.getSpeciesNodes())) if col_sp_order is None else col_sp_order
-        m = nx.bipartite.biadjacency_matrix(self,row_order=col_sp_order[0],column_order=col_sp_order[1])
+        m = networkx.bipartite.biadjacency_matrix(self,row_order=col_sp_order[0],column_order=col_sp_order[1])
         self._speciesBag_matrix = (*col_sp_order,m)
                     
     def getSpeciesNodes(self,data=False):
