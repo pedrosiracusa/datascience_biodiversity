@@ -112,10 +112,17 @@ class SpeciesCollectorsNetwork(networkx.Graph):
         return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==0 ]
     
     def getSpeciesBag( self, collectorName ):
+	"""
+	Returns
+	-------
+	A tuple (colList, similarityVector), where the first element is the list will all collectors and
+	the second is the similarity vector for the input collector.
+	"""
         if self._speciesBag_matrix is None:
             self._buildSpeciesBagMatrix()
             
-        collectorsList = self._speciesBag_matrix[0]
-        m = self._speciesBag_matrix[2]
-        i = collectorsList.index(collectorName)
-        return m.getrow(i)
+        colList, spList, m = self._speciesBag_matrix
+        i = colList.index(collectorName)
+        return (colList, m.getrow(i))
+
+
