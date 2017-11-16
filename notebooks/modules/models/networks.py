@@ -1,3 +1,4 @@
+import numpy
 import networkx
 import itertools
 from collections import Counter
@@ -112,17 +113,21 @@ class SpeciesCollectorsNetwork(networkx.Graph):
         return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==0 ]
     
     def getSpeciesBag( self, collectorName ):
-	"""
-	Returns
-	-------
-	A tuple (colList, similarityVector), where the first element is the list will all collectors and
-	the second is the similarity vector for the input collector.
-	"""
+        """
+        Parameters
+        ----------
+        
+        Returns
+        -------
+        A tuple (spIds, vector), where the first element is a list containing all species names and
+        the second is the vector containing their counts.
+        """
         if self._speciesBag_matrix is None:
             self._buildSpeciesBagMatrix()
             
         colList, spList, m = self._speciesBag_matrix
         i = colList.index(collectorName)
-        return (colList, m.getrow(i))
+        vector = m.getrow(i)
+        return (spList, vector)
 
 
