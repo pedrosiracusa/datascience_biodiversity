@@ -62,6 +62,10 @@ class SpeciesCollectorsNetwork(networkx.Graph):
     """
     Class for Species-collectors networks
     
+    Attributes
+    ----------
+    _biadj_matrix : (colList, spList, m), where m is a scipy sparse matrix
+    
     Parameters
     ----------
     
@@ -69,7 +73,7 @@ class SpeciesCollectorsNetwork(networkx.Graph):
     """
     def __init__(self, data=None, species=None, collectorsNames=None, weighted=False, namesMap=None, **attr):
         
-        self._speciesBag_matrix = None
+        self._biadj_matrix = None
         
         set_bipartite_attr=False
         if species is not None and collectorsNames is not None:
@@ -101,10 +105,10 @@ class SpeciesCollectorsNetwork(networkx.Graph):
                 except:
                     self[u][v]['weight'] = w    
     
-    def _buildSpeciesBagMatrix( self, col_sp_order=None ):
+    def _buildBiadjMatrix( self, col_sp_order=None ):
         col_sp_order=(sorted(self.getCollectorsNodes()),sorted(self.getSpeciesNodes())) if col_sp_order is None else col_sp_order
         m = networkx.bipartite.biadjacency_matrix(self,row_order=col_sp_order[0],column_order=col_sp_order[1])
-        self._speciesBag_matrix = (*col_sp_order,m)
+        self._biadj_matrix = (*col_sp_order,m)
                     
     def getSpeciesNodes(self,data=False):
         return [ (n,d) if data==True else n for n,d in self.nodes(data=True) if d['bipartite']==1 ]
@@ -122,12 +126,26 @@ class SpeciesCollectorsNetwork(networkx.Graph):
         A tuple (spIds, vector), where the first element is a list containing all species names and
         the second is the vector containing their counts.
         """
-        if self._speciesBag_matrix is None:
-            self._buildSpeciesBagMatrix()
+        if self._biadj_matrix is None:
+            self._buildBiadjMatrix()
             
-        colList, spList, m = self._speciesBag_matrix
+        colList, spList, m = self._biadj_matrix
         i = colList.index(collectorName)
         vector = m.getrow(i)
         return (spList, vector)
-
+    
+    def getInterest( self, speciesName ):
+        """
+        Returns
+        -------
+        The same as the getSpeciesBag method
+        """
+        if self._biadj_matrix is None:
+            self._buildBiadjMatrix()
+        
+        colList, spList, m = self._biadj_matrix
+        m = m.transpose()
+        i = spList.index(speciesName)
+        vector = m.getrow(i)
+        return (colList,vector)
 
